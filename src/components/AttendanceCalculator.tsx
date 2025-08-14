@@ -34,7 +34,7 @@ export default function AttendanceCalculator({ onAttendanceChange }: AttendanceC
 
   const totalWorkingDays = useMemo(() => {
     if (!endDate) return 0;
-    const startDate = new Date(new Date().getFullYear(), 5, 28);
+    const startDate = new Date(new Date().getFullYear(), 5, 28); // June 28th
     return getTotalWorkingDays(startDate, endDate);
   }, [endDate]);
   
