@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'AttendanceAce',
-  description: 'Your personal attendance tracker and success predictor.',
+  title: 'SIMATS Attendance',
+  description: 'You can count on it',
 };
 
 export default function RootLayout({
