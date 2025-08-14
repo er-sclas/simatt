@@ -29,7 +29,7 @@ export default function Home() {
         </div>
         
         <footer className="mt-12 text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} AttendanceAce. All rights reserved.</p>
+            <p>&copy; (252414039) {new Date().getFullYear()}</p>
         </footer>
       </div>
     </main>
