@@ -1,4 +1,4 @@
-import { addDays, eachDayOfInterval, getDay, getWeekOfMonth } from 'date-fns';
+import { addDays, eachDayOfInterval, getDay, getWeekOfMonth, subDays } from 'date-fns';
 
 const publicHolidays = [
   '2024-10-01', // Oct 1
@@ -18,6 +18,10 @@ function isPublicHoliday(date: Date): boolean {
   return publicHolidays.includes(dateString);
 }
 
+function isHoliday(date: Date): boolean {
+    return isSunday(day) || isThirdSaturday(day) || isPublicHoliday(day);
+}
+
 export function getTotalWorkingDays(startDate: Date, endDate: Date): number {
   if (startDate > endDate) return 0;
 
@@ -30,4 +34,20 @@ export function getTotalWorkingDays(startDate: Date, endDate: Date): number {
     }
   }
   return workingDays;
+}
+
+export function getStartDate(daysPassed: number): Date {
+    let currentDate = new Date();
+    let daysToSubtract = 0;
+    let classDaysFound = 0;
+
+    while(classDaysFound < daysPassed) {
+        let tempDate = subDays(currentDate, daysToSubtract);
+        if(!isHoliday(tempDate)) {
+            classDaysFound++;
+        }
+        daysToSubtract++;
+    }
+
+    return subDays(currentDate, daysToSubtract - 1);
 }

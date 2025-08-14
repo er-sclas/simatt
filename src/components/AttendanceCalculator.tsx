@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { getTotalWorkingDays } from '@/lib/date-utils';
+import { getTotalWorkingDays, getStartDate } from '@/lib/date-utils';
 
 const MIN_ATTENDANCE_PERCENT = 80;
 
@@ -31,17 +31,18 @@ export default function AttendanceCalculator({ onAttendanceChange }: AttendanceC
     setShowResults(false);
     onAttendanceChange(null);
   };
-
-  const totalWorkingDays = useMemo(() => {
-    if (!endDate) return 0;
-    const startDate = new Date(new Date().getFullYear(), 5, 28); // June 28th
-    return getTotalWorkingDays(startDate, endDate);
-  }, [endDate]);
   
   const parsedDaysPassed = parseInt(daysPassed, 10);
   const parsedDaysAttended = parseInt(daysAttended, 10);
   
-  const canCalculate = !isNaN(parsedDaysPassed) && !isNaN(parsedDaysAttended) && parsedDaysPassed > 0 && parsedDaysAttended <= parsedDaysPassed && totalWorkingDays > 0;
+  const canCalculate = !isNaN(parsedDaysPassed) && !isNaN(parsedDaysAttended) && parsedDaysPassed > 0 && parsedDaysAttended <= parsedDaysPassed;
+
+  const totalWorkingDays = useMemo(() => {
+    if (!endDate || !canCalculate) return 0;
+    const startDate = getStartDate(parsedDaysPassed);
+    return getTotalWorkingDays(startDate, endDate);
+  }, [endDate, parsedDaysPassed, canCalculate]);
+
 
   const calculations = useMemo(() => {
     if (!canCalculate || totalWorkingDays <= 0) {
