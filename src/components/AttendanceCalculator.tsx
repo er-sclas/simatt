@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { InfoCard } from './InfoCard';
 import { PieChart, TrendingUp, Bed, Calculator, Calendar as CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -22,7 +23,8 @@ type AttendanceCalculatorProps = {
 export default function AttendanceCalculator({ onAttendanceChange }: AttendanceCalculatorProps) {
   const [daysPassed, setDaysPassed] = useState<string>('');
   const [daysAttended, setDaysAttended] = useState<string>('');
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date(new Date().getFullYear(), 9, 4));
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date(2025, 9, 4));
+  const [todayAttendanceTaken, setTodayAttendanceTaken] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
   const handleInputChange = (setter: (val: string) => void) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -39,9 +41,9 @@ export default function AttendanceCalculator({ onAttendanceChange }: AttendanceC
 
   const totalWorkingDays = useMemo(() => {
     if (!endDate || !canCalculate) return 0;
-    const startDate = getStartDate(parsedDaysPassed);
+    const startDate = getStartDate(parsedDaysPassed, todayAttendanceTaken);
     return getTotalWorkingDays(startDate, endDate);
-  }, [endDate, parsedDaysPassed, canCalculate]);
+  }, [endDate, parsedDaysPassed, canCalculate, todayAttendanceTaken]);
 
 
   const calculations = useMemo(() => {
@@ -131,6 +133,20 @@ export default function AttendanceCalculator({ onAttendanceChange }: AttendanceC
             </Popover>
              <p className="text-xs text-muted-foreground pt-1">The expected end of semester is October 4th. Adjust if needed.</p>
           </div>
+          <div className="sm:col-span-2 flex items-center space-x-2 pt-2">
+            <Checkbox 
+                id="today-attendance" 
+                checked={todayAttendanceTaken}
+                onCheckedChange={(checked) => {
+                    setTodayAttendanceTaken(checked as boolean);
+                    setShowResults(false);
+                    onAttendanceChange(null);
+                }}
+            />
+            <Label htmlFor="today-attendance" className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Has attendance for today been taken?
+            </Label>
+           </div>
         </div>
         <div className="mt-4 text-center text-sm font-medium">
             Total Working Days: <span className="text-primary font-bold">{totalWorkingDays > 0 ? totalWorkingDays : 'N/A'}</span>

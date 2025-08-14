@@ -1,8 +1,8 @@
-import { eachDayOfInterval, getDay, getWeekOfMonth, subDays } from 'date-fns';
+import { eachDayOfInterval, getDay, getWeekOfMonth, subDays, startOfDay, sub } from 'date-fns';
 
 const publicHolidays = [
-  '2024-10-01', // Oct 1
-  '2024-10-02', // Oct 2
+  '2025-10-01', // Oct 1
+  '2025-10-02', // Oct 2
 ];
 
 function isThirdSaturday(date: Date): boolean {
@@ -36,23 +36,34 @@ export function getTotalWorkingDays(startDate: Date, endDate: Date): number {
   return workingDays;
 }
 
-export function getStartDate(daysPassed: number): Date {
-    if (daysPassed === 0) {
+export function getStartDate(daysPassed: number, todayAttendanceTaken: boolean): Date {
+    if (daysPassed <= 0) {
       return new Date();
     }
-    let currentDate = new Date();
-    let daysToSubtract = 0;
-    let classDaysFound = 0;
-
-    while(classDaysFound < daysPassed) {
-        let tempDate = subDays(currentDate, daysToSubtract);
-        if(!isHoliday(tempDate)) {
-            classDaysFound++;
-        }
-        daysToSubtract++;
+    
+    let currentDate = startOfDay(new Date());
+    let effectiveCurrentDate = todayAttendanceTaken ? currentDate : subDays(currentDate, 1);
+    
+    let daysToCount = daysPassed;
+    // If today is a working day and attendance is not taken, don't count today in daysPassed
+    if (!isHoliday(currentDate) && !todayAttendanceTaken) {
+       // The 'daysPassed' already excludes today, so no change needed.
     }
 
-    // After the loop, daysToSubtract has been incremented one last time
-    // and tempDate is the start date.
-    return subDays(currentDate, daysToSubtract - 1);
+    // If today is a working day and attendance has been taken, it's one of the 'daysPassed'.
+    if (!isHoliday(currentDate) && todayAttendanceTaken) {
+        daysToCount--;
+    }
+
+    let dateCursor = subDays(currentDate, 1);
+    while (daysToCount > 0) {
+        if (!isHoliday(dateCursor)) {
+            daysToCount--;
+        }
+        if (daysToCount > 0) {
+            dateCursor = subDays(dateCursor, 1);
+        }
+    }
+
+    return dateCursor;
 }
