@@ -6,9 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { InfoCard } from './InfoCard';
-import { PieChart, TrendingUp, Bed, Calculator } from 'lucide-react';
+import { PieChart, TrendingUp, Bed, Calculator, Calendar as CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { getTotalWorkingDays } from '@/lib/date-utils';
 
-const TOTAL_WORKING_DAYS = 55;
 const MIN_ATTENDANCE_PERCENT = 80;
 
 type AttendanceCalculatorProps = {
@@ -18,6 +22,7 @@ type AttendanceCalculatorProps = {
 export default function AttendanceCalculator({ onAttendanceChange }: AttendanceCalculatorProps) {
   const [daysPassed, setDaysPassed] = useState<string>('');
   const [daysAttended, setDaysAttended] = useState<string>('');
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date(new Date().getFullYear(), 9, 4));
   const [showResults, setShowResults] = useState(false);
 
   const handleInputChange = (setter: (val: string) => void) => (e: ChangeEvent<HTMLInputElement>) => {
@@ -26,14 +31,20 @@ export default function AttendanceCalculator({ onAttendanceChange }: AttendanceC
     setShowResults(false);
     onAttendanceChange(null);
   };
+
+  const totalWorkingDays = useMemo(() => {
+    if (!endDate) return 0;
+    const startDate = new Date(new Date().getFullYear(), 5, 28);
+    return getTotalWorkingDays(startDate, endDate);
+  }, [endDate]);
   
   const parsedDaysPassed = parseInt(daysPassed, 10);
   const parsedDaysAttended = parseInt(daysAttended, 10);
   
-  const canCalculate = !isNaN(parsedDaysPassed) && !isNaN(parsedDaysAttended) && parsedDaysPassed > 0 && parsedDaysAttended <= parsedDaysPassed;
+  const canCalculate = !isNaN(parsedDaysPassed) && !isNaN(parsedDaysAttended) && parsedDaysPassed > 0 && parsedDaysAttended <= parsedDaysPassed && totalWorkingDays > 0;
 
   const calculations = useMemo(() => {
-    if (!canCalculate) {
+    if (!canCalculate || totalWorkingDays <= 0) {
       return {
         currentAttendance: null,
         projectedAttendance: null,
@@ -43,12 +54,12 @@ export default function AttendanceCalculator({ onAttendanceChange }: AttendanceC
 
     const current = (parsedDaysAttended / parsedDaysPassed) * 100;
 
-    const daysRemaining = TOTAL_WORKING_DAYS - parsedDaysPassed;
-    const projected = ((parsedDaysAttended + (daysRemaining > 0 ? daysRemaining : 0)) / TOTAL_WORKING_DAYS) * 100;
+    const daysRemaining = totalWorkingDays - parsedDaysPassed;
+    const projected = ((parsedDaysAttended + (daysRemaining > 0 ? daysRemaining : 0)) / totalWorkingDays) * 100;
     
     // 79.5 is rounded to 80, so a student needs to achieve at least 79.5
-    const minDaysToAttend = Math.ceil(TOTAL_WORKING_DAYS * (MIN_ATTENDANCE_PERCENT / 100) - 0.5);
-    const maxAbsencesAllowed = TOTAL_WORKING_DAYS - minDaysToAttend;
+    const minDaysToAttend = Math.ceil(totalWorkingDays * (MIN_ATTENDANCE_PERCENT / 100) - 0.5);
+    const maxAbsencesAllowed = totalWorkingDays - minDaysToAttend;
     const absencesSoFar = parsedDaysPassed - parsedDaysAttended;
     const bunks = Math.max(0, maxAbsencesAllowed - absencesSoFar);
     
@@ -57,7 +68,7 @@ export default function AttendanceCalculator({ onAttendanceChange }: AttendanceC
       projectedAttendance: projected,
       bunksAllowed: bunks,
     };
-  }, [parsedDaysPassed, parsedDaysAttended, canCalculate]);
+  }, [parsedDaysPassed, parsedDaysAttended, canCalculate, totalWorkingDays]);
 
   const handleCalculate = () => {
     if (canCalculate) {
@@ -89,6 +100,39 @@ export default function AttendanceCalculator({ onAttendanceChange }: AttendanceC
             <Label htmlFor="days-attended">Days You Attended</Label>
             <Input id="days-attended" type="text" placeholder="e.g., 18" value={daysAttended} onChange={handleInputChange(setDaysAttended)} />
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="end-date">Projected End of Semester</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !endDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={(date) => {
+                    setEndDate(date || undefined);
+                    setShowResults(false);
+                    onAttendanceChange(null);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+             <p className="text-xs text-muted-foreground pt-1">The expected end of semester is October 4th. Adjust if needed.</p>
+          </div>
+        </div>
+        <div className="mt-4 text-center text-sm font-medium">
+            Total Working Days: <span className="text-primary font-bold">{totalWorkingDays > 0 ? totalWorkingDays : 'N/A'}</span>
         </div>
         <Button onClick={handleCalculate} disabled={!canCalculate} className="mt-6 w-full bg-accent text-accent-foreground hover:bg-accent/90 font-bold">
           Calculate
