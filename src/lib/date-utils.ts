@@ -19,7 +19,7 @@ function isPublicHoliday(date: Date): boolean {
 }
 
 function isHoliday(date: Date): boolean {
-    return isSunday(day) || isThirdSaturday(day) || isPublicHoliday(day);
+    return isSunday(date) || isThirdSaturday(date) || isPublicHoliday(date);
 }
 
 export function getTotalWorkingDays(startDate: Date, endDate: Date): number {
