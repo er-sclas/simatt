@@ -14,11 +14,11 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 shadow-sm">
             <GraduationCap className="h-6 w-6 text-primary" />
             <h1 className="text-2xl font-bold tracking-tight text-primary sm:text-3xl font-headline">
-              AttendanceAce
+              SIMATS Attendance Calculator
             </h1>
           </div>
           <p className="mt-2 text-lg text-foreground/80">
-            Track your attendance and project your future to ace your semester.
+            The only one that works
           </p>
         </header>
 
